@@ -1,8 +1,38 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import puppeteerCore from 'puppeteer-core'
-import chromium from '@sparticuz/chromium'
 import * as cheerio from 'cheerio'
 import lighthouse from 'lighthouse'
+
+// Dynamic import for puppeteer - use different packages for local vs production
+async function getBrowser() {
+  // Try local puppeteer first, fallback to puppeteer-core + chromium
+  try {
+    const puppeteer = await import('puppeteer')
+    return await puppeteer.default.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-blink-features=AutomationControlled',
+        '--disable-features=IsolateOrigins,site-per-process'
+      ]
+    })
+  } catch {
+    // Production environment (Render) - use serverless chromium
+    const puppeteerCore = await import('puppeteer-core')
+    const chromium = await import('@sparticuz/chromium')
+    return await puppeteerCore.default.launch({
+      args: [
+        ...chromium.default.args,
+        '--disable-blink-features=AutomationControlled',
+        '--disable-features=IsolateOrigins,site-per-process'
+      ],
+      defaultViewport: { width: 1920, height: 1080 },
+      executablePath: await chromium.default.executablePath(),
+      headless: true,
+    })
+  }
+}
+
 import { 
   detectTechnologies, 
   detectSEO, 
@@ -296,18 +326,8 @@ export default async function handler(
       return res.status(400).json({ error: 'Invalid URL format' })
     }
 
-    // Launch browser with serverless-compatible Chromium
-    browser = await puppeteerCore.launch({
-      args: [
-        ...chromium.args,
-        '--disable-blink-features=AutomationControlled',
-        '--disable-features=IsolateOrigins,site-per-process',
-        '--flag-switches-begin --disable-site-isolation-trials --flag-switches-end'
-      ],
-      defaultViewport: { width: 1920, height: 1080 },
-      executablePath: await chromium.executablePath(),
-      headless: true,
-    })
+    // Launch browser with environment-specific setup
+    browser = await getBrowser()
 
     const page = await browser.newPage()
 
