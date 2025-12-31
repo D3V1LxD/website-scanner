@@ -298,7 +298,12 @@ export default async function handler(
 
     // Launch browser with serverless-compatible Chromium
     browser = await puppeteerCore.launch({
-      args: chromium.args,
+      args: [
+        ...chromium.args,
+        '--disable-blink-features=AutomationControlled',
+        '--disable-features=IsolateOrigins,site-per-process',
+        '--flag-switches-begin --disable-site-isolation-trials --flag-switches-end'
+      ],
       defaultViewport: { width: 1920, height: 1080 },
       executablePath: await chromium.executablePath(),
       headless: true,
@@ -306,17 +311,53 @@ export default async function handler(
 
     const page = await browser.newPage()
 
+    // Enhanced stealth: Remove webdriver flag and modify navigator properties
+    await page.evaluateOnNewDocument(() => {
+      // Remove webdriver property
+      Object.defineProperty(navigator, 'webdriver', {
+        get: () => undefined,
+      })
+
+      // Override plugins to make it look real
+      Object.defineProperty(navigator, 'plugins', {
+        get: () => [1, 2, 3, 4, 5],
+      })
+
+      // Override languages
+      Object.defineProperty(navigator, 'languages', {
+        get: () => ['en-US', 'en'],
+      })
+
+      // Chrome runtime
+      // @ts-ignore
+      window.chrome = {
+        runtime: {},
+      }
+
+      // Permissions
+      const originalQuery = window.navigator.permissions.query
+      window.navigator.permissions.query = (parameters: any) => (
+        parameters.name === 'notifications' ?
+          Promise.resolve({ state: Notification.permission } as any) :
+          originalQuery(parameters)
+      )
+    })
+
     // Set viewport
     await page.setViewport({ width: 1920, height: 1080 })
 
-    // Set extra headers
+    // Set extra headers with realistic browser fingerprint
     await page.setExtraHTTPHeaders({
       'Accept-Language': 'en-US,en;q=0.9',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
       'Accept-Encoding': 'gzip, deflate, br',
-      'DNT': '1',
       'Connection': 'keep-alive',
-      'Upgrade-Insecure-Requests': '1'
+      'Upgrade-Insecure-Requests': '1',
+      'Sec-Fetch-Dest': 'document',
+      'Sec-Fetch-Mode': 'navigate',
+      'Sec-Fetch-Site': 'none',
+      'Sec-Fetch-User': '?1',
+      'Cache-Control': 'max-age=0'
     })
 
     // Track network requests and response headers
