@@ -282,8 +282,10 @@ export default async function handler(
     }
 
     // Launch browser with stealth mode
+    // Use system Chrome on Render, bundled Chromium locally
     browser = await puppeteer.launch({
       headless: true,
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -291,6 +293,8 @@ export default async function handler(
         '--disable-accelerated-2d-canvas',
         '--disable-gpu',
         '--window-size=1920x1080',
+        '--single-process',
+        '--no-zygote',
         '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       ]
     })
