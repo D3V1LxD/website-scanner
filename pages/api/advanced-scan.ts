@@ -694,42 +694,37 @@ export default async function handler(
     // Categorize third-party services
     result.overview.thirdPartyServices = categorizeThirdPartyServices(scripts, html)
 
-    // NEW FEATURES: Domain, DNS, Server, Security, Contact, Social, Schema, Languages, Links, Uptime
-    
-    // 1. WHOIS Data
-    result.overview.whoisData = await analyzeWhois(url)
+    // NEW FEATURES: Run all async operations in parallel with timeouts
+    const featureTimeout = (promise: Promise<any>, timeoutMs: number = 10000) => {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeoutMs))
+      ]).catch(() => undefined)
+    }
 
-    // 2. DNS Records
-    result.overview.dnsRecords = await analyzeDNS(url)
+    // Run all async features in parallel batches
+    const [whoisData, dnsRecords, serverInfo, securityHeaders, uptime] = await Promise.all([
+      featureTimeout(analyzeWhois(url), 8000),
+      featureTimeout(analyzeDNS(url), 5000),
+      featureTimeout(analyzeServerInfo(url, responseHeaders), 3000),
+      featureTimeout(analyzeSecurityHeaders(url, responseHeaders), 2000),
+      featureTimeout(analyzeUptime(url), 8000)
+    ])
 
-    // 3. Server Info (includes geolocation) - uses existing responseHeaders
-    result.overview.serverInfo = await analyzeServerInfo(url, responseHeaders)
+    // Assign async results
+    if (whoisData) result.overview.whoisData = whoisData
+    if (dnsRecords) result.overview.dnsRecords = dnsRecords
+    if (serverInfo) result.overview.serverInfo = serverInfo
+    if (securityHeaders) result.overview.securityHeaders = securityHeaders
+    if (uptime) result.overview.uptime = uptime
 
-    // 4. Security Headers
-    result.overview.securityHeaders = await analyzeSecurityHeaders(url, responseHeaders)
-
-    // 5. Contact Information
+    // Synchronous features (fast, no timeout needed)
     result.overview.contactInfo = extractContactInfo(html, $)
-
-    // 6. Social Media Presence
     result.overview.socialMedia = detectSocialMedia($)
-
-    // 7. Structured Data (JSON-LD, Schema.org)
     result.overview.structuredData = analyzeStructuredData(html, $)
-
-    // 8. Languages & Internationalization
     result.overview.i18n = detectLanguages(html, $)
-
-    // 9. External Links Analysis
     result.overview.externalLinks = analyzeExternalLinks($, url, links)
-
-    // 10. Internal Links Analysis
     result.overview.internalLinks = analyzeInternalLinks($, url, links)
-
-    // 11. Uptime & Historical Data
-    result.overview.uptime = await analyzeUptime(url)
-
-    // 12. Enhanced Tech Stack
     result.overview.enhancedTechStack = detectEnhancedTechStack(html, responseHeaders, scripts)
 
     // Add broken links if any were detected

@@ -23,7 +23,7 @@ export async function analyzeWhois(domain: string) {
     // Remove protocol and path from domain
     const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '').split(':')[0]
     
-    const whoisData = await whoiser(cleanDomain, { timeout: 10000 })
+    const whoisData = await whoiser(cleanDomain, { timeout: 7000 })
     
     // Extract data from WHOIS response (format varies by registrar)
     const firstResult = whoisData[Object.keys(whoisData)[0]] as any
@@ -230,7 +230,7 @@ export async function analyzeUptime(url: string) {
       const cleanUrl = url.replace(/^https?:\/\//, '')
       const waybackResponse = await axios.get(
         `https://archive.org/wayback/available?url=${cleanUrl}`,
-        { timeout: 5000 }
+        { timeout: 3000 }
       )
       
       if (waybackResponse.data?.archived_snapshots?.closest) {
@@ -241,18 +241,7 @@ export async function analyzeUptime(url: string) {
           archiveUrl: snapshot.url
         }
         
-        // Get total snapshots (simplified - would need CDX API for exact count)
-        try {
-          const cdxResponse = await axios.get(
-            `https://web.archive.org/cdx/search/cdx?url=${cleanUrl}&output=json&limit=1`,
-            { timeout: 5000 }
-          )
-          if (cdxResponse.data?.length > 1) {
-            historicalData.firstSnapshot = cdxResponse.data[1][1]
-          }
-        } catch {
-          // CDX API unavailable
-        }
+        // Skip CDX API call - too slow for production
       }
     } catch {
       // Wayback Machine unavailable
