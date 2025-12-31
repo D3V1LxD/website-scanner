@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import puppeteer from 'puppeteer-extra'
-import StealthPlugin from 'puppeteer-extra-plugin-stealth'
+import puppeteerCore from 'puppeteer-core'
+import chromium from '@sparticuz/chromium'
 import * as cheerio from 'cheerio'
 import lighthouse from 'lighthouse'
 import { 
@@ -21,9 +21,6 @@ import {
   categorizeThirdPartyServices
 } from '@/utils/advanced-features'
 import { WebsiteOverview } from '@/pages/index'
-
-// Add stealth plugin to avoid detection
-puppeteer.use(StealthPlugin())
 
 interface ApiDetail {
   url: string
@@ -281,22 +278,12 @@ export default async function handler(
       return res.status(400).json({ error: 'Invalid URL format' })
     }
 
-    // Launch browser with stealth mode
-    // Use system Chrome on Render, bundled Chromium locally
-    browser = await puppeteer.launch({
-      headless: true,
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu',
-        '--window-size=1920x1080',
-        '--single-process',
-        '--no-zygote',
-        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      ]
+    // Launch browser with serverless-compatible Chromium
+    browser = await puppeteerCore.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
     })
 
     const page = await browser.newPage()

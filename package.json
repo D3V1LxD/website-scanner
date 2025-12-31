@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@sparticuz/chromium": "^143.0.0",
     "axios": "^1.6.2",
     "bytes": "^3.1.2",
     "cheerio": "^1.0.0-rc.12",
@@ -16,6 +17,7 @@
     "next": "^14.0.4",
     "prettier": "^3.1.1",
     "puppeteer": "^24.1.0",
+    "puppeteer-core": "^24.34.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "react": "^18.2.0",
