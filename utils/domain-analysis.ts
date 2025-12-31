@@ -1,13 +1,24 @@
 import { promises as dns } from 'dns'
 import axios from 'axios'
 
-// @ts-ignore - no types available
-const whoiser = require('whoiser')
-// @ts-ignore - no types available
-const geoip = require('geoip-lite')
+// Dynamic imports for packages without types
+let whoiser: any
+let geoip: any
+
+// Load packages asynchronously
+async function loadDependencies() {
+  if (!whoiser) {
+    whoiser = await import('whoiser')
+  }
+  if (!geoip) {
+    geoip = await import('geoip-lite')
+  }
+}
 
 // Analyze WHOIS data for domain
 export async function analyzeWhois(domain: string) {
+  await loadDependencies()
+  
   try {
     // Remove protocol and path from domain
     const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '').split(':')[0]
@@ -129,6 +140,8 @@ export async function analyzeDNS(domain: string) {
 
 // Analyze server information including geolocation
 export async function analyzeServerInfo(domain: string, headers: Record<string, string>) {
+  await loadDependencies()
+  
   try {
     const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '').split(':')[0]
     
