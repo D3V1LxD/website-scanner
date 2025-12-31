@@ -279,7 +279,7 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { url, deepScan = false } = req.body
+  const { url, deepScan = false, skipScreenshots = true, skipWhois = true } = req.body
 
   if (!url) {
     return res.status(400).json({ error: 'URL is required' })
@@ -512,27 +512,35 @@ export default async function handler(
         .slice(0, 20)
     }, targetUrl.origin)
 
-    // Capture screenshots
-    const desktopScreenshot = await page.screenshot({ 
-      encoding: 'base64',
-      fullPage: false,
-      type: 'jpeg',
-      quality: 80
-    })
+    // Capture screenshots (optional - heavy on memory)
+    let desktopScreenshot: string | undefined
+    let mobileScreenshot: string | undefined
     
-    // Mobile screenshot
-    await page.setViewport({ width: 375, height: 667 })
-    const mobileScreenshot = await page.screenshot({ 
-      encoding: 'base64',
-      fullPage: false,
-      type: 'jpeg',
-      quality: 80
-    })
+    if (!skipScreenshots) {
+      desktopScreenshot = await page.screenshot({ 
+        encoding: 'base64',
+        fullPage: false,
+        type: 'jpeg',
+        quality: 60
+      }) as string
+      
+      // Mobile screenshot
+      await page.setViewport({ width: 375, height: 667 })
+      mobileScreenshot = await page.screenshot({ 
+        encoding: 'base64',
+        fullPage: false,
+        type: 'jpeg',
+        quality: 60
+      }) as string
+      
+      // Reset viewport
+      await page.setViewport({ width: 1920, height: 1080 })
+    }
 
     // Get the HTML content
     const html = await page.content()
 
-    // Close browser
+    // Close browser ASAP to free memory
     await browser.close()
     browser = null
 
@@ -690,11 +698,13 @@ export default async function handler(
       }
     }
 
-    // Add screenshots
-    result.overview.screenshots = {
-      desktop: `data:image/jpeg;base64,${desktopScreenshot}`,
-      mobile: `data:image/jpeg;base64,${mobileScreenshot}`,
-      capturedAt: new Date().toISOString()
+    // Add screenshots (if captured)
+    if (desktopScreenshot && mobileScreenshot) {
+      result.overview.screenshots = {
+        desktop: `data:image/jpeg;base64,${desktopScreenshot}`,
+        mobile: `data:image/jpeg;base64,${mobileScreenshot}`,
+        capturedAt: new Date().toISOString()
+      }
     }
 
     // Add console errors
@@ -743,13 +753,13 @@ export default async function handler(
       ]).catch(() => undefined)
     }
 
-    // Run all async features in parallel batches
+    // Run async features in parallel (skip WHOIS by default - it's slow)
     const [whoisData, dnsRecords, serverInfo, securityHeaders, uptime] = await Promise.all([
-      featureTimeout(analyzeWhois(url), 8000),
-      featureTimeout(analyzeDNS(url), 5000),
-      featureTimeout(analyzeServerInfo(url, responseHeaders), 3000),
+      skipWhois ? Promise.resolve(undefined) : featureTimeout(analyzeWhois(url), 6000),
+      featureTimeout(analyzeDNS(url), 4000),
+      featureTimeout(analyzeServerInfo(url, responseHeaders), 2000),
       featureTimeout(analyzeSecurityHeaders(url, responseHeaders), 2000),
-      featureTimeout(analyzeUptime(url), 8000)
+      featureTimeout(analyzeUptime(url), 5000)
     ])
 
     // Assign async results
