@@ -42,7 +42,7 @@ interface Props {
 }
 
 export default function ScanResults({ result }: Props) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'screenshots' | 'technologies' | 'performance' | 'apis' | 'backend' | 'seo' | 'accessibility' | 'privacy' | 'ssl' | 'robots' | 'console' | 'social' | 'carbon' | 'pageweight' | 'thirdparty' | 'mobile' | 'ecommerce' | 'content' | 'contacts' | 'forms' | 'resources' | 'preview'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'screenshots' | 'technologies' | 'performance' | 'apis' | 'backend' | 'seo' | 'accessibility' | 'privacy' | 'ssl' | 'robots' | 'console' | 'social' | 'carbon' | 'pageweight' | 'thirdparty' | 'mobile' | 'ecommerce' | 'content' | 'contacts' | 'forms' | 'resources' | 'preview' | 'domain' | 'dns' | 'server' | 'security' | 'sociallinks' | 'schema' | 'languages' | 'externallinks' | 'internallinks' | 'uptime' | 'techstack'>('overview')
   const [showHtml, setShowHtml] = useState(false)
   const [previewMode, setPreviewMode] = useState<'static' | 'live'>('live')
   const [currentPreviewUrl, setCurrentPreviewUrl] = useState(result.url)
@@ -66,6 +66,17 @@ export default function ScanResults({ result }: Props) {
     { id: 'carbon' as const, label: 'Carbon Footprint', count: result.overview?.carbonFootprint ? 1 : 0 },
     { id: 'pageweight' as const, label: 'Page Weight', count: result.overview?.pageWeight ? 1 : 0 },
     { id: 'thirdparty' as const, label: 'Third-Party', count: result.overview?.thirdPartyServices?.total || 0 },
+    { id: 'domain' as const, label: 'Domain Info', count: result.overview?.whoisData ? 1 : 0 },
+    { id: 'dns' as const, label: 'DNS Records', count: result.overview?.dnsRecords ? 1 : 0 },
+    { id: 'server' as const, label: 'Server Info', count: result.overview?.serverInfo ? 1 : 0 },
+    { id: 'security' as const, label: 'Security Headers', count: result.overview?.securityHeaders ? 1 : 0 },
+    { id: 'sociallinks' as const, label: 'Social Media', count: result.overview?.socialMedia?.totalPlatforms || 0 },
+    { id: 'schema' as const, label: 'Structured Data', count: result.overview?.structuredData?.types.length || 0 },
+    { id: 'languages' as const, label: 'Languages', count: result.overview?.i18n?.detectedLanguages.length || 0 },
+    { id: 'externallinks' as const, label: 'External Links', count: result.overview?.externalLinks?.total || 0 },
+    { id: 'internallinks' as const, label: 'Internal Links', count: result.overview?.internalLinks?.total || 0 },
+    { id: 'uptime' as const, label: 'Uptime', count: result.overview?.uptime ? 1 : 0 },
+    { id: 'techstack' as const, label: 'Tech Stack', count: result.overview?.enhancedTechStack ? 1 : 0 },
     { id: 'mobile' as const, label: 'Mobile & PWA', count: result.overview?.mobile || result.overview?.pwa ? 1 : 0 },
     { id: 'ecommerce' as const, label: 'E-commerce', count: result.overview?.ecommerce?.isEcommerce ? 1 : 0 },
     { id: 'content' as const, label: 'Content', count: result.overview?.content ? 1 : 0 },
@@ -1796,6 +1807,563 @@ export default function ScanResults({ result }: Props) {
                       {result.overview.thirdPartyServices.payments.map((service: string, i: number) => (
                         <span key={i} className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded font-medium">{service}</span>
                       ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Domain Info Tab */}
+          {activeTab === 'domain' && result.overview?.whoisData && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Domain Information</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-900 mb-4">Registration Details</h4>
+                  <div className="space-y-3">
+                    <div><span className="font-medium">Domain:</span> {result.overview.whoisData.domainName}</div>
+                    <div><span className="font-medium">Registrar:</span> {result.overview.whoisData.registrar}</div>
+                    {result.overview.whoisData.registrantOrganization && (
+                      <div><span className="font-medium">Organization:</span> {result.overview.whoisData.registrantOrganization}</div>
+                    )}
+                    {result.overview.whoisData.registrantCountry && (
+                      <div><span className="font-medium">Country:</span> {result.overview.whoisData.registrantCountry}</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-900 mb-4">Timeline</h4>
+                  <div className="space-y-3">
+                    {result.overview.whoisData.creationDate && (
+                      <div><span className="font-medium">Created:</span> {new Date(result.overview.whoisData.creationDate).toLocaleDateString()}</div>
+                    )}
+                    {result.overview.whoisData.expirationDate && (
+                      <div><span className="font-medium">Expires:</span> {new Date(result.overview.whoisData.expirationDate).toLocaleDateString()}</div>
+                    )}
+                    {result.overview.whoisData.domainAge && (
+                      <div><span className="font-medium">Domain Age:</span> {Math.floor(result.overview.whoisData.domainAge / 365)} years</div>
+                    )}
+                    {result.overview.whoisData.daysUntilExpiry !== undefined && (
+                      <div className={result.overview.whoisData.daysUntilExpiry < 30 ? 'text-red-600 font-semibold' : ''}>
+                        <span className="font-medium">Days Until Expiry:</span> {result.overview.whoisData.daysUntilExpiry}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {result.overview.whoisData.nameServers && result.overview.whoisData.nameServers.length > 0 && (
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-900 mb-4">Name Servers</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {result.overview.whoisData.nameServers.map((ns: string, i: number) => (
+                      <div key={i} className="text-sm font-mono text-gray-700">{ns}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* DNS Records Tab */}
+          {activeTab === 'dns' && result.overview?.dnsRecords && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">DNS Records</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {result.overview.dnsRecords.a && result.overview.dnsRecords.a.length > 0 && (
+                  <div className="bg-white rounded-lg p-6 border border-gray-200">
+                    <h4 className="text-base font-semibold text-gray-900 mb-3">A Records (IPv4)</h4>
+                    {result.overview.dnsRecords.a.map((ip: string, i: number) => (
+                      <div key={i} className="font-mono text-sm text-gray-700">{ip}</div>
+                    ))}
+                  </div>
+                )}
+
+                {result.overview.dnsRecords.aaaa && result.overview.dnsRecords.aaaa.length > 0 && (
+                  <div className="bg-white rounded-lg p-6 border border-gray-200">
+                    <h4 className="text-base font-semibold text-gray-900 mb-3">AAAA Records (IPv6)</h4>
+                    {result.overview.dnsRecords.aaaa.map((ip: string, i: number) => (
+                      <div key={i} className="font-mono text-sm text-gray-700">{ip}</div>
+                    ))}
+                  </div>
+                )}
+
+                {result.overview.dnsRecords.mx && result.overview.dnsRecords.mx.length > 0 && (
+                  <div className="bg-white rounded-lg p-6 border border-gray-200">
+                    <h4 className="text-base font-semibold text-gray-900 mb-3">MX Records (Mail)</h4>
+                    {result.overview.dnsRecords.mx.map((mx: any, i: number) => (
+                      <div key={i} className="text-sm text-gray-700">
+                        <span className="font-medium">{mx.priority}</span> - {mx.exchange}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {result.overview.dnsRecords.ns && result.overview.dnsRecords.ns.length > 0 && (
+                  <div className="bg-white rounded-lg p-6 border border-gray-200">
+                    <h4 className="text-base font-semibold text-gray-900 mb-3">NS Records</h4>
+                    {result.overview.dnsRecords.ns.map((ns: string, i: number) => (
+                      <div key={i} className="font-mono text-sm text-gray-700">{ns}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {result.overview.dnsRecords.spf && (
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-900 mb-3">SPF Record</h4>
+                  <div className="font-mono text-sm text-gray-700 break-all">{result.overview.dnsRecords.spf}</div>
+                </div>
+              )}
+
+              {result.overview.dnsRecords.dmarc && (
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-900 mb-3">DMARC Record</h4>
+                  <div className="font-mono text-sm text-gray-700 break-all">{result.overview.dnsRecords.dmarc}</div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Server Info Tab */}
+          {activeTab === 'server' && result.overview?.serverInfo && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Server Information</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-900 mb-4">Network</h4>
+                  <div className="space-y-2">
+                    {result.overview.serverInfo.ipAddress && (
+                      <div><span className="font-medium">IPv4:</span> <span className="font-mono">{result.overview.serverInfo.ipAddress}</span></div>
+                    )}
+                    {result.overview.serverInfo.ipv6Address && (
+                      <div><span className="font-medium">IPv6:</span> <span className="font-mono text-xs">{result.overview.serverInfo.ipv6Address}</span></div>
+                    )}
+                    {result.overview.serverInfo.hostname && (
+                      <div><span className="font-medium">Hostname:</span> {result.overview.serverInfo.hostname}</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-900 mb-4">Location</h4>
+                  <div className="space-y-2">
+                    {result.overview.serverInfo.city && (
+                      <div><span className="font-medium">City:</span> {result.overview.serverInfo.city}</div>
+                    )}
+                    {result.overview.serverInfo.country && (
+                      <div><span className="font-medium">Country:</span> {result.overview.serverInfo.country}</div>
+                    )}
+                    {result.overview.serverInfo.timezone && (
+                      <div><span className="font-medium">Timezone:</span> {result.overview.serverInfo.timezone}</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-900 mb-4">Server Software</h4>
+                  <div className="space-y-2">
+                    {result.overview.serverInfo.serverSoftware && (
+                      <div><span className="font-medium">Server:</span> {result.overview.serverInfo.serverSoftware}</div>
+                    )}
+                    {result.overview.serverInfo.poweredBy && (
+                      <div><span className="font-medium">Powered By:</span> {result.overview.serverInfo.poweredBy}</div>
+                    )}
+                  </div>
+                </div>
+
+                {result.overview.serverInfo.cdnDetected && (
+                  <div className="bg-white rounded-lg p-6 border border-gray-200">
+                    <h4 className="text-base font-semibold text-gray-900 mb-4">CDN</h4>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">🚀</span>
+                      <span className="font-medium">{result.overview.serverInfo.cdnProvider}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Security Headers Tab */}
+          {activeTab === 'security' && result.overview?.securityHeaders && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-900">Security Headers</h3>
+                <div className="flex items-center gap-4">
+                  <div className={`text-4xl font-bold px-6 py-3 rounded-lg ${
+                    result.overview.securityHeaders.grade === 'A+' || result.overview.securityHeaders.grade === 'A' ? 'bg-green-100 text-green-800' :
+                    result.overview.securityHeaders.grade === 'B' ? 'bg-blue-100 text-blue-800' :
+                    result.overview.securityHeaders.grade === 'C' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {result.overview.securityHeaders.grade}
+                  </div>
+                  <div className="text-sm text-gray-600">Score: {result.overview.securityHeaders.score}/80</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {Object.entries(result.overview.securityHeaders.headers).map(([key, value]: [string, any]) => (
+                  <div key={key} className="bg-white rounded-lg p-6 border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-semibold text-gray-900">{key.replace(/([A-Z])/g, ' $1').trim()}</h4>
+                      <span className={`px-2 py-1 text-xs rounded ${value.present ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {value.present ? '✓ Present' : '✗ Missing'}
+                      </span>
+                    </div>
+                    {value.value && (
+                      <div className="text-xs font-mono text-gray-600 break-all mt-2">{value.value}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {result.overview.securityHeaders.warnings.length > 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-yellow-900 mb-2">⚠️ Warnings</h4>
+                  <ul className="list-disc list-inside space-y-1">
+                    {result.overview.securityHeaders.warnings.map((warning: string, i: number) => (
+                      <li key={i} className="text-sm text-yellow-800">{warning}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {result.overview.securityHeaders.recommendations.length > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-2">💡 Recommendations</h4>
+                  <ul className="list-disc list-inside space-y-1">
+                    {result.overview.securityHeaders.recommendations.map((rec: string, i: number) => (
+                      <li key={i} className="text-sm text-blue-800">{rec}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Social Media Links Tab */}
+          {activeTab === 'sociallinks' && result.overview?.socialMedia && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Social Media Presence</h3>
+              
+              <div className="bg-white rounded-lg p-6 border border-gray-200 mb-6">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-gray-900">{result.overview.socialMedia.totalPlatforms}</div>
+                  <div className="text-sm text-gray-600 mt-2">Social Media Platforms</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {result.overview.socialMedia.platforms.map((platform: any, i: number) => (
+                  <div key={i} className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-gray-900">{platform.name}</span>
+                      {platform.verified && <span className="text-blue-500">✓</span>}
+                    </div>
+                    {platform.handle && (
+                      <div className="text-sm text-gray-600 mb-2">@{platform.handle}</div>
+                    )}
+                    <a href={platform.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline break-all">
+                      {platform.url}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Structured Data Tab */}
+          {activeTab === 'schema' && result.overview?.structuredData && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Structured Data</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <div className={`text-3xl mb-2 ${result.overview.structuredData.hasStructuredData ? 'text-green-600' : 'text-red-600'}`}>
+                    {result.overview.structuredData.hasStructuredData ? '✓' : '✗'}
+                  </div>
+                  <div className="text-sm text-gray-600">Structured Data</div>
+                </div>
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <div className="text-3xl font-bold text-gray-900 mb-2">{result.overview.structuredData.types.length}</div>
+                  <div className="text-sm text-gray-600">Schema Types</div>
+                </div>
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <div className={`text-3xl mb-2 ${result.overview.structuredData.richSnippetsEligible ? 'text-green-600' : 'text-gray-400'}`}>
+                    {result.overview.structuredData.richSnippetsEligible ? '⭐' : '○'}
+                  </div>
+                  <div className="text-sm text-gray-600">Rich Snippets</div>
+                </div>
+              </div>
+
+              {result.overview.structuredData.types.length > 0 && (
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-900 mb-4">Schema Types Detected</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {result.overview.structuredData.types.map((type: string, i: number) => (
+                      <span key={i} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded font-medium">{type}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {result.overview.structuredData.schemas.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="text-base font-semibold text-gray-900">Schema Details</h4>
+                  {result.overview.structuredData.schemas.slice(0, 3).map((schema: any, i: number) => (
+                    <div key={i} className="bg-white rounded-lg p-4 border border-gray-200">
+                      <div className="font-semibold text-gray-900 mb-2">{schema.type}</div>
+                      <pre className="text-xs bg-gray-50 p-3 rounded overflow-x-auto">
+                        {JSON.stringify(schema.data, null, 2).slice(0, 500)}...
+                      </pre>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Languages Tab */}
+          {activeTab === 'languages' && result.overview?.i18n && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Languages & Internationalization</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-900 mb-4">Primary Language</h4>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {result.overview.i18n.primaryLanguage || 'Not specified'}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-900 mb-4">Features</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className={result.overview.i18n.hasHreflang ? 'text-green-600' : 'text-gray-400'}>
+                        {result.overview.i18n.hasHreflang ? '✓' : '✗'}
+                      </span>
+                      <span>Hreflang Tags</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={result.overview.i18n.hasTranslations ? 'text-green-600' : 'text-gray-400'}>
+                        {result.overview.i18n.hasTranslations ? '✓' : '✗'}
+                      </span>
+                      <span>Translations Available</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={result.overview.i18n.rtlSupport ? 'text-green-600' : 'text-gray-400'}>
+                        {result.overview.i18n.rtlSupport ? '✓' : '✗'}
+                      </span>
+                      <span>RTL Support</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {result.overview.i18n.hreflangTags.length > 0 && (
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-900 mb-4">Hreflang Tags ({result.overview.i18n.hreflangTags.length})</h4>
+                  <div className="space-y-2">
+                    {result.overview.i18n.hreflangTags.slice(0, 10).map((tag: any, i: number) => (
+                      <div key={i} className="flex items-center gap-3 text-sm">
+                        <span className="font-mono bg-gray-100 px-2 py-1 rounded">{tag.lang}</span>
+                        <span className="text-gray-600 truncate">{tag.url}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* External Links Tab */}
+          {activeTab === 'externallinks' && result.overview?.externalLinks && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">External Links Analysis</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <div className="text-3xl font-bold text-gray-900 mb-2">{result.overview.externalLinks.total}</div>
+                  <div className="text-sm text-gray-600">Total Links</div>
+                </div>
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <div className="text-3xl font-bold text-gray-900 mb-2">{result.overview.externalLinks.domains.length}</div>
+                  <div className="text-sm text-gray-600">Unique Domains</div>
+                </div>
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <div className="text-3xl font-bold text-green-600 mb-2">{result.overview.externalLinks.followedLinks}</div>
+                  <div className="text-sm text-gray-600">Followed</div>
+                </div>
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <div className="text-3xl font-bold text-gray-500 mb-2">{result.overview.externalLinks.nofollowLinks}</div>
+                  <div className="text-sm text-gray-600">Nofollow</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {Object.entries(result.overview.externalLinks.categorized).map(([category, links]: [string, any]) => (
+                  links.length > 0 && (
+                    <div key={category} className="bg-white rounded-lg p-6 border border-gray-200">
+                      <h4 className="text-base font-semibold text-gray-900 mb-3 capitalize">{category.replace(/([A-Z])/g, ' $1').trim()} ({links.length})</h4>
+                      <div className="space-y-1 max-h-40 overflow-y-auto">
+                        {links.slice(0, 10).map((link: string, i: number) => (
+                          <div key={i} className="text-xs text-gray-600 truncate">{link}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Internal Links Tab */}
+          {activeTab === 'internallinks' && result.overview?.internalLinks && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Internal Links Structure</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <div className="text-3xl font-bold text-gray-900 mb-2">{result.overview.internalLinks.total}</div>
+                  <div className="text-sm text-gray-600">Total Links</div>
+                </div>
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <div className="text-3xl font-bold text-gray-900 mb-2">{result.overview.internalLinks.unique}</div>
+                  <div className="text-sm text-gray-600">Unique Pages</div>
+                </div>
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <div className="text-3xl font-bold text-gray-900 mb-2">{result.overview.internalLinks.maxDepth}</div>
+                  <div className="text-sm text-gray-600">Max Depth</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Uptime Tab */}
+          {activeTab === 'uptime' && result.overview?.uptime && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Uptime & Historical Data</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <div className={`text-4xl mb-2 ${result.overview.uptime.isOnline ? 'text-green-600' : 'text-red-600'}`}>
+                    {result.overview.uptime.isOnline ? '✓' : '✗'}
+                  </div>
+                  <div className="text-sm text-gray-600">Status</div>
+                  <div className="text-xs text-gray-500 mt-1">HTTP {result.overview.uptime.responseCode}</div>
+                </div>
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <div className="text-3xl font-bold text-gray-900 mb-2">{result.overview.uptime.responseTime}ms</div>
+                  <div className="text-sm text-gray-600">Response Time</div>
+                </div>
+                <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                  <div className="text-sm text-gray-600 mb-1">Last Checked</div>
+                  <div className="text-xs text-gray-500">{new Date(result.overview.uptime.lastChecked).toLocaleString()}</div>
+                </div>
+              </div>
+
+              {result.overview.uptime.historicalData?.waybackAvailable && (
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-900 mb-4">Wayback Machine</h4>
+                  <div className="space-y-2">
+                    <div><span className="font-medium">Available:</span> ✓ Yes</div>
+                    {result.overview.uptime.historicalData.firstSnapshot && (
+                      <div><span className="font-medium">First Snapshot:</span> {result.overview.uptime.historicalData.firstSnapshot}</div>
+                    )}
+                    {result.overview.uptime.historicalData.lastSnapshot && (
+                      <div><span className="font-medium">Last Snapshot:</span> {result.overview.uptime.historicalData.lastSnapshot}</div>
+                    )}
+                    {result.overview.uptime.historicalData.archiveUrl && (
+                      <a href={result.overview.uptime.historicalData.archiveUrl} target="_blank" rel="noopener noreferrer" 
+                         className="inline-block mt-2 text-blue-600 hover:underline text-sm">
+                        View in Wayback Machine →
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Enhanced Tech Stack Tab */}
+          {activeTab === 'techstack' && result.overview?.enhancedTechStack && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Enhanced Technology Stack</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {result.overview.enhancedTechStack.backend && result.overview.enhancedTechStack.backend.language && (
+                  <div className="bg-white rounded-lg p-6 border border-gray-200">
+                    <h4 className="text-base font-semibold text-gray-900 mb-3">Backend</h4>
+                    <div className="space-y-2">
+                      <div><span className="font-medium">Language:</span> {result.overview.enhancedTechStack.backend.language}</div>
+                      {result.overview.enhancedTechStack.backend.framework && (
+                        <div><span className="font-medium">Framework:</span> {result.overview.enhancedTechStack.backend.framework}</div>
+                      )}
+                      <div className="text-xs text-gray-500 mt-2">
+                        Detected from: {result.overview.enhancedTechStack.backend.detectedFrom.join(', ')}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {result.overview.enhancedTechStack.server && result.overview.enhancedTechStack.server.software && (
+                  <div className="bg-white rounded-lg p-6 border border-gray-200">
+                    <h4 className="text-base font-semibold text-gray-900 mb-3">Server</h4>
+                    <div className="space-y-2">
+                      <div><span className="font-medium">Software:</span> {result.overview.enhancedTechStack.server.software}</div>
+                      {result.overview.enhancedTechStack.server.version && (
+                        <div><span className="font-medium">Version:</span> {result.overview.enhancedTechStack.server.version}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {result.overview.enhancedTechStack.security && Object.keys(result.overview.enhancedTechStack.security).length > 0 && (
+                  <div className="bg-white rounded-lg p-6 border border-gray-200">
+                    <h4 className="text-base font-semibold text-gray-900 mb-3">Security</h4>
+                    <div className="space-y-2">
+                      {result.overview.enhancedTechStack.security.waf && (
+                        <div><span className="font-medium">WAF:</span> {result.overview.enhancedTechStack.security.waf}</div>
+                      )}
+                      {result.overview.enhancedTechStack.security.ddosProtection && (
+                        <div><span className="font-medium">DDoS Protection:</span> {result.overview.enhancedTechStack.security.ddosProtection}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {result.overview.enhancedTechStack.marketing && (
+                  <div className="bg-white rounded-lg p-6 border border-gray-200">
+                    <h4 className="text-base font-semibold text-gray-900 mb-3">Marketing Tools</h4>
+                    <div className="space-y-3">
+                      {result.overview.enhancedTechStack.marketing.analytics.length > 0 && (
+                        <div>
+                          <div className="text-sm font-medium text-gray-700 mb-1">Analytics</div>
+                          <div className="flex flex-wrap gap-1">
+                            {result.overview.enhancedTechStack.marketing.analytics.map((tool: string, i: number) => (
+                              <span key={i} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">{tool}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {result.overview.enhancedTechStack.marketing.tagManager.length > 0 && (
+                        <div>
+                          <div className="text-sm font-medium text-gray-700 mb-1">Tag Manager</div>
+                          <div className="flex flex-wrap gap-1">
+                            {result.overview.enhancedTechStack.marketing.tagManager.map((tool: string, i: number) => (
+                              <span key={i} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">{tool}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

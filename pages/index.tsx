@@ -403,6 +403,178 @@ export interface WebsiteOverview {
     payments: string[]
     other: string[]
   }
+  whoisData?: {
+    domainName?: string
+    registrar?: string
+    registrantName?: string
+    registrantOrganization?: string
+    registrantCountry?: string
+    creationDate?: string
+    expirationDate?: string
+    updatedDate?: string
+    domainAge?: number
+    daysUntilExpiry?: number
+    nameServers?: string[]
+    status?: string[]
+    emails?: string[]
+    registrarUrl?: string
+  }
+  dnsRecords?: {
+    a?: string[]
+    aaaa?: string[]
+    mx?: Array<{ priority: number; exchange: string }>
+    txt?: string[]
+    cname?: string[]
+    ns?: string[]
+    soa?: {
+      mname: string
+      rname: string
+      serial: number
+      refresh: number
+      retry: number
+      expire: number
+      minimum: number
+    }
+    spf?: string
+    dmarc?: string
+    dnssec?: boolean
+  }
+  serverInfo?: {
+    ipAddress?: string
+    ipv6Address?: string
+    hostname?: string
+    isp?: string
+    asn?: string
+    continent?: string
+    country?: string
+    countryCode?: string
+    region?: string
+    city?: string
+    latitude?: number
+    longitude?: number
+    timezone?: string
+    serverSoftware?: string
+    poweredBy?: string
+    responseTime?: number
+    uptime?: string
+    cdnDetected?: boolean
+    cdnProvider?: string
+  }
+  securityHeaders?: {
+    score: number
+    grade: string
+    headers: {
+      strictTransportSecurity?: { present: boolean; value?: string; maxAge?: number; includeSubDomains?: boolean; preload?: boolean }
+      contentSecurityPolicy?: { present: boolean; value?: string; directives?: string[] }
+      xFrameOptions?: { present: boolean; value?: string }
+      xContentTypeOptions?: { present: boolean; value?: string }
+      referrerPolicy?: { present: boolean; value?: string }
+      permissionsPolicy?: { present: boolean; value?: string }
+      xXssProtection?: { present: boolean; value?: string }
+      expectCt?: { present: boolean; value?: string }
+    }
+    missingHeaders: string[]
+    warnings: string[]
+    recommendations: string[]
+  }
+  contactInfo?: {
+    emails: string[]
+    phones: string[]
+    addresses: string[]
+    contactForms: Array<{ url: string; method: string; fields: string[] }>
+    socialMediaLinks: Array<{ platform: string; url: string }>
+  }
+  socialMedia?: {
+    platforms: Array<{
+      name: string
+      url: string
+      handle?: string
+      verified?: boolean
+    }>
+    totalPlatforms: number
+    hasOfficialLinks: boolean
+  }
+  structuredData?: {
+    hasStructuredData: boolean
+    types: string[]
+    schemas: Array<{
+      type: string
+      data: any
+    }>
+    validationErrors?: string[]
+    richSnippetsEligible: boolean
+  }
+  i18n?: {
+    primaryLanguage?: string
+    detectedLanguages: string[]
+    hasHreflang: boolean
+    hreflangTags: Array<{ lang: string; url: string }>
+    hasTranslations: boolean
+    rtlSupport: boolean
+  }
+  externalLinks?: {
+    total: number
+    domains: string[]
+    categorized: {
+      social: string[]
+      cdn: string[]
+      analytics: string[]
+      advertising: string[]
+      affiliate: string[]
+      sponsored: string[]
+      other: string[]
+    }
+    followedLinks: number
+    nofollowLinks: number
+  }
+  internalLinks?: {
+    total: number
+    unique: number
+    maxDepth: number
+    orphanPages: string[]
+    brokenInternal: string[]
+    redirectChains: Array<{ from: string; to: string; hops: number }>
+  }
+  uptime?: {
+    isOnline: boolean
+    responseCode: number
+    responseTime: number
+    lastChecked: string
+    historicalData?: {
+      waybackAvailable: boolean
+      firstSnapshot?: string
+      lastSnapshot?: string
+      totalSnapshots?: number
+      archiveUrl?: string
+    }
+  }
+  enhancedTechStack?: {
+    backend?: {
+      language?: string
+      framework?: string
+      detectedFrom: string[]
+    }
+    database?: {
+      type?: string
+      evidence: string[]
+    }
+    server?: {
+      software?: string
+      version?: string
+      os?: string
+    }
+    security?: {
+      waf?: string
+      ddosProtection?: string
+      ssl?: string
+    }
+    marketing?: {
+      analytics: string[]
+      tagManager: string[]
+      advertising: string[]
+      email: string[]
+    }
+  }
 }
 
 export interface ScanResult {

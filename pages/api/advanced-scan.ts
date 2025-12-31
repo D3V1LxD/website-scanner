@@ -20,6 +20,24 @@ import {
   generateSocialPreviews,
   categorizeThirdPartyServices
 } from '@/utils/advanced-features'
+import {
+  analyzeWhois,
+  analyzeDNS,
+  analyzeServerInfo,
+  analyzeUptime
+} from '@/utils/domain-analysis'
+import { analyzeSecurityHeaders } from '@/utils/security-analysis'
+import {
+  extractContactInfo,
+  detectSocialMedia,
+  analyzeStructuredData,
+  detectLanguages,
+  detectEnhancedTechStack
+} from '@/utils/content-extraction'
+import {
+  analyzeExternalLinks,
+  analyzeInternalLinks
+} from '@/utils/link-analysis'
 import { WebsiteOverview } from '@/pages/index'
 
 interface ApiDetail {
@@ -675,6 +693,44 @@ export default async function handler(
 
     // Categorize third-party services
     result.overview.thirdPartyServices = categorizeThirdPartyServices(scripts, html)
+
+    // NEW FEATURES: Domain, DNS, Server, Security, Contact, Social, Schema, Languages, Links, Uptime
+    
+    // 1. WHOIS Data
+    result.overview.whoisData = await analyzeWhois(url)
+
+    // 2. DNS Records
+    result.overview.dnsRecords = await analyzeDNS(url)
+
+    // 3. Server Info (includes geolocation) - uses existing responseHeaders
+    result.overview.serverInfo = await analyzeServerInfo(url, responseHeaders)
+
+    // 4. Security Headers
+    result.overview.securityHeaders = await analyzeSecurityHeaders(url, responseHeaders)
+
+    // 5. Contact Information
+    result.overview.contactInfo = extractContactInfo(html, $)
+
+    // 6. Social Media Presence
+    result.overview.socialMedia = detectSocialMedia($)
+
+    // 7. Structured Data (JSON-LD, Schema.org)
+    result.overview.structuredData = analyzeStructuredData(html, $)
+
+    // 8. Languages & Internationalization
+    result.overview.i18n = detectLanguages(html, $)
+
+    // 9. External Links Analysis
+    result.overview.externalLinks = analyzeExternalLinks($, url, links)
+
+    // 10. Internal Links Analysis
+    result.overview.internalLinks = analyzeInternalLinks($, url, links)
+
+    // 11. Uptime & Historical Data
+    result.overview.uptime = await analyzeUptime(url)
+
+    // 12. Enhanced Tech Stack
+    result.overview.enhancedTechStack = detectEnhancedTechStack(html, responseHeaders, scripts)
 
     // Add broken links if any were detected
     if (brokenLinks.length > 0) {

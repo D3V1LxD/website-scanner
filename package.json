@@ -13,6 +13,8 @@
     "axios": "^1.6.2",
     "bytes": "^3.1.2",
     "cheerio": "^1.0.0-rc.12",
+    "franc": "^6.2.0",
+    "geoip-lite": "^1.4.10",
     "lighthouse": "^13.0.1",
     "next": "^14.0.4",
     "prettier": "^3.1.1",
@@ -24,9 +26,11 @@
     "react-dom": "^18.2.0",
     "robots-parser": "^3.0.1",
     "tls": "^0.0.1",
+    "whoiser": "^2.0.0-beta.10",
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
+    "@types/geoip-lite": "^1.4.4",
     "@types/node": "^20.10.5",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
