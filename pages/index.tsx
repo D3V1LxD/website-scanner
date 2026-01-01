@@ -871,16 +871,6 @@ export default function Home() {
                     />
                     <span className="text-gray-700">Security</span>
                   </label>
-                  <label className="flex items-center space-x-2 cursor-pointer text-sm">
-                    <input
-                      type="checkbox"
-                      checked={!advancedOptions.skipScreenshots}
-                      onChange={(e) => setAdvancedOptions({...advancedOptions, skipScreenshots: !e.target.checked})}
-                      className="w-4 h-4 text-gray-900 rounded border-gray-300 focus:ring-gray-900"
-                      disabled={loading || scanMode === 'basic'}
-                    />
-                    <span className={scanMode === 'basic' ? 'text-gray-400' : 'text-gray-700'}>Screenshots</span>
-                  </label>
                 </div>
               </div>
               
