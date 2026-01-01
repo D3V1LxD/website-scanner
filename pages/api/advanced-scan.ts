@@ -309,7 +309,7 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { url, deepScan = false, skipScreenshots = true, skipWhois = true } = req.body
+  const { url, deepScan = false, skipScreenshots = false, skipWhois = true } = req.body
 
   if (!url) {
     return res.status(400).json({ error: 'URL is required' })
