@@ -735,25 +735,25 @@ export default function Home() {
                   onClick={() => setScanMode('basic')}
                   className={`flex-1 px-4 py-3 rounded-md font-medium transition-colors ${
                     scanMode === 'basic'
-                      ? 'bg-white text-gray-900 shadow-sm'
+                      ? 'bg-black text-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                   disabled={loading}
                 >
                   Basic Scan
-                  <span className="block text-xs font-normal mt-1 text-gray-500">Fast analysis</span>
+                  <span className="block text-xs font-normal mt-1 text-gray-400">Fast analysis</span>
                 </button>
                 <button
                   onClick={() => setScanMode('advanced')}
                   className={`flex-1 px-4 py-3 rounded-md font-medium transition-colors ${
                     scanMode === 'advanced'
-                      ? 'bg-white text-gray-900 shadow-sm'
+                      ? 'bg-black text-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                   disabled={loading}
                 >
                   Advanced Scan
-                  <span className="block text-xs font-normal mt-1 text-gray-500">Browser rendering</span>
+                  <span className="block text-xs font-normal mt-1 text-gray-400">Browser rendering</span>
                 </button>
               </div>
               
