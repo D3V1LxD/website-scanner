@@ -103,7 +103,7 @@ npm start
 
 The scanner looks for:
 - Direct API calls: `fetch('/api/users')`
-- Axios requests: `axios.get('https://api.example.com')`
+- Axios requests: `axios.get('https://api.itsmahim.me')`
 - jQuery AJAX: `$.ajax({ url: '/api/data' })`
 - URLs containing: `/api/`, `/graphql`, `/rest/`, `/v1/`, `.json`
 - Backend domains: `api.*`, `backend.*`, `service.*`
@@ -152,21 +152,21 @@ Fast scanning using enhanced HTTP requests.
 **Request Body:**
 ```json
 {
-  "url": "https://example.com"
+  "url": "https://itsmahim.me"
 }
 ```
 
 **Response:**
 ```json
 {
-  "url": "https://example.com",
+  "url": "https://itsmahim.me",
   "html": "<!DOCTYPE html>...",
-  "apis": ["https://api.example.com/users"],
-  "backendUrls": ["https://backend.example.com"],
-  "scripts": ["https://example.com/script.js"],
-  "stylesheets": ["https://example.com/style.css"],
-  "images": ["https://example.com/image.jpg"],
-  "links": ["https://example.com/about"],
+  "apis": ["https://api.itsmahim.me/users"],
+  "backendUrls": ["https://backend.itsmahim.me"],
+  "scripts": ["https://itsmahim.me/script.js"],
+  "stylesheets": ["https://itsmahim.me/style.css"],
+  "images": ["https://itsmahim.me/image.jpg"],
+  "links": ["https://itsmahim.me/about"],
   "metadata": {
     "title": "Example Site",
     "description": "Example description"
@@ -188,7 +188,7 @@ Full browser rendering with network monitoring.
 ```json
 {
   ...basicScanData,
-  "networkRequests": ["https://api.example.com/v1/data", "..."]
+  "networkRequests": ["https://api.itsmahim.me/v1/data", "..."]
 }
 ```
 

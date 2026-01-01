@@ -885,7 +885,7 @@ export default function Home() {
               <div className="mt-4">
                 <p className="text-xs text-gray-500 mb-2">Example sites:</p>
                 <div className="flex flex-wrap gap-2">
-                  {['https://github.com', 'https://www.npmjs.com', 'https://stackoverflow.com'].map((exampleUrl) => (
+                  {['https://github.com', 'https://itsmahim.me', 'https://thedailywanted.qzz.io'].map((exampleUrl) => (
                     <button
                       key={exampleUrl}
                       onClick={() => setUrl(exampleUrl)}

@@ -159,11 +159,11 @@ Possible additions:
 ```typescript
 // Basic Scan (Fast)
 POST /api/scan
-{ "url": "https://example.com" }
+{ "url": "https://itsmahim.me" }
 
 // Advanced Scan (Stealth)
 POST /api/advanced-scan
-{ "url": "https://protected-site.com" }
+{ "url": "https://thedailywanted.qzz.io/" }
 ```
 
 ## 🎓 Educational Purpose
