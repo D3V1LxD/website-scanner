@@ -12,15 +12,23 @@ async function getBrowser() {
     puppeteer.default.use(StealthPlugin())
     
     return await puppeteer.default.launch({
-      headless: true,
+      headless: 'new' as any, // Use new headless mode for better stealth
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-blink-features=AutomationControlled',
         '--disable-features=IsolateOrigins,site-per-process',
         '--disable-web-security',
-        '--disable-features=site-per-process',
         '--window-size=1920,1080',
+        '--disable-dev-shm-usage',
+        '--disable-software-rasterizer',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
+        '--disable-infobars',
+        '--window-position=0,0',
+        '--ignore-certificate-errors',
+        '--ignore-certificate-errors-spki-list',
         '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       ]
     })
@@ -39,11 +47,17 @@ async function getBrowser() {
         '--disable-features=IsolateOrigins,site-per-process',
         '--disable-web-security',
         '--window-size=1920,1080',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
+        '--disable-infobars',
+        '--window-position=0,0',
+        '--ignore-certificate-errors',
         '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       ],
       defaultViewport: { width: 1920, height: 1080 },
       executablePath: await chromium.default.executablePath(),
-      headless: true,
+      headless: chromium.default.headless || 'new' as any,
     })
   }
 }
@@ -409,10 +423,20 @@ export default async function handler(
     // Navigate to the page with Cloudflare bypass
     const navigationStart = Date.now()
     
-    await navigateWithBypass(page, url, {
+    const navResult = await navigateWithBypass(page, url, {
       waitUntil: 'networkidle2',
-      timeout: 45000
+      timeout: 60000,
+      retries: 2
     })
+    
+    // Check if navigation was successful
+    if (!navResult.success) {
+      if (browser) await browser.close()
+      return res.status(500).json({ 
+        error: navResult.error || 'Failed to access website',
+        details: 'Cloudflare protection detected or navigation failed. The site may require manual verification.'
+      })
+    }
     
     const navigationEnd = Date.now()
     const loadTime = navigationEnd - navigationStart

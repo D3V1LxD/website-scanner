@@ -39,29 +39,40 @@ A powerful Next.js application that can scan any website, clone its content, and
 
 The scanner includes several advanced techniques to bypass bot detection and Cloudflare protection:
 
-1. **Cloudflare Bypass**: Enhanced stealth mode to bypass Cloudflare challenges
+1. **Advanced Cloudflare Bypass** (See [CLOUDFLARE_BYPASS.md](CLOUDFLARE_BYPASS.md) for details)
    - Puppeteer-extra with stealth plugin
-   - Custom navigator property overrides
-   - WebGL fingerprint spoofing
-   - Realistic browser timing and behavior simulation
+   - Automatic challenge detection and waiting (up to 30s)
+   - Retry mechanism (2 attempts with delays)
+   - Enhanced evasion scripts (cdc_* removal, notification mocking)
+   - Manual verification detection
+   - Real-time challenge monitoring
    
 2. **User-Agent Rotation**: Randomly selects from multiple modern browser User-Agents
+
 3. **Realistic Headers**: Includes Accept-Language, DNT, Sec-Fetch-* headers, sec-ch-ua
+
 4. **Browser Fingerprinting**: Mimics real Chrome behavior with:
    - Hardware concurrency simulation (8 cores)
    - Device memory spoofing (8GB)
    - Battery API simulation
    - Network connection properties (4G)
    - Screen properties (1920x1080, 24-bit color)
+   - Realistic plugin list (Chrome PDF Plugin, Native Client)
    
 5. **Network Monitoring**: Captures all XHR/Fetch requests in real-time
+
 6. **Human Behavior Simulation**: 
    - Random delays before navigation (500-1500ms)
    - Mouse movement simulation
    - Scroll simulation
-   - Challenge detection and wait logic
+   - Challenge detection with 500ms polling
+   - Post-challenge stabilization wait
    
 7. **Connection Management**: Proper keep-alive and connection handling
+
+8. **Error Handling**: Detailed error messages for Cloudflare failures with suggestions
+
+**⚠️ Note**: Some Cloudflare challenges require manual verification (CAPTCHAs) and cannot be bypassed automatically. See [CLOUDFLARE_BYPASS.md](CLOUDFLARE_BYPASS.md) for limitations and troubleshooting.
 
 ## Technology Stack
 

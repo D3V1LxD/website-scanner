@@ -21,16 +21,85 @@ export const stealthArgs = [
 ]
 
 /**
- * Apply advanced stealth measures to a Puppeteer page
+ * Inject advanced evasion scripts
  */
-export async function applyStealthMeasures(page: Page): Promise<void> {
-  // Remove webdriver flags and modify navigator properties
+async function injectEvasionScripts(page: Page): Promise<void> {
   await page.evaluateOnNewDocument(() => {
-    // Remove webdriver property
+    // Overwrite the `navigator.webdriver` property
     Object.defineProperty(navigator, 'webdriver', {
       get: () => undefined,
     })
 
+    // Pass the Chrome Test
+    delete (window as any).cdc_adoQpoasnfa76pfcZLmcfl_Array
+    delete (window as any).cdc_adoQpoasnfa76pfcZLmcfl_Promise
+    delete (window as any).cdc_adoQpoasnfa76pfcZLmcfl_Symbol
+
+    // Pass the Permissions Test
+    const originalQuery = window.navigator.permissions.query
+    window.navigator.permissions.query = (parameters: any) =>
+      parameters.name === 'notifications'
+        ? Promise.resolve({ state: Notification.permission } as PermissionStatus)
+        : originalQuery(parameters)
+
+    // Pass the Plugins Length Test
+    Object.defineProperty(navigator, 'plugins', {
+      get: () => [
+        {
+          0: { type: 'application/x-google-chrome-pdf', suffixes: 'pdf', description: 'Portable Document Format' },
+          description: 'Portable Document Format',
+          filename: 'internal-pdf-viewer',
+          length: 1,
+          name: 'Chrome PDF Plugin'
+        },
+        {
+          0: { type: 'application/pdf', suffixes: 'pdf', description: '' },
+          description: '',
+          filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai',
+          length: 1,
+          name: 'Chrome PDF Viewer'
+        },
+        {
+          0: { type: 'application/x-nacl', suffixes: '', description: 'Native Client Executable' },
+          1: { type: 'application/x-pnacl', suffixes: '', description: 'Portable Native Client Executable' },
+          description: '',
+          filename: 'internal-nacl-plugin',
+          length: 2,
+          name: 'Native Client'
+        }
+      ],
+    })
+
+    // Pass the Languages Test
+    Object.defineProperty(navigator, 'languages', {
+      get: () => ['en-US', 'en'],
+    })
+
+    // Pass the Chrome Test
+    // @ts-ignore
+    window.chrome = {
+      runtime: {},
+      loadTimes: function() {},
+      csi: function() {},
+      app: {}
+    }
+
+    // Mock notifications permission
+    Object.defineProperty(Notification, 'permission', {
+      get: () => 'default'
+    })
+  })
+}
+
+/**
+ * Apply advanced stealth measures to a Puppeteer page
+ */
+export async function applyStealthMeasures(page: Page): Promise<void> {
+  // Inject evasion scripts first
+  await injectEvasionScripts(page)
+  
+  // Remove webdriver flags and modify navigator properties
+  await page.evaluateOnNewDocument(() => {
     // Override the `plugins` property to use a custom getter.
     Object.defineProperty(navigator, 'plugins', {
       get: () => [1, 2, 3, 4, 5],
@@ -139,31 +208,102 @@ export async function applyStealthMeasures(page: Page): Promise<void> {
 }
 
 /**
- * Wait for Cloudflare challenge to complete
+ * Detect if page is showing Cloudflare challenge
  */
-export async function waitForCloudflare(page: Page, timeout: number = 15000): Promise<boolean> {
+export async function isCloudflareChallenge(page: Page): Promise<boolean> {
   try {
-    await page.waitForFunction(
-      () => {
-        const title = document.title.toLowerCase()
-        const bodyText = document.body.innerText.toLowerCase()
-        
-        // Check for common Cloudflare challenge indicators
-        const hasChallenge = 
-          title.includes('just a moment') ||
-          title.includes('attention required') ||
-          bodyText.includes('checking your browser') ||
-          bodyText.includes('please wait') ||
-          bodyText.includes('ddos protection') ||
-          bodyText.includes('cloudflare')
-        
-        return !hasChallenge
-      },
-      { timeout }
-    )
-    return true
+    const indicators = await page.evaluate(() => {
+      const title = document.title.toLowerCase()
+      const bodyText = document.body.innerText.toLowerCase()
+      const html = document.documentElement.innerHTML.toLowerCase()
+      
+      // Check for Cloudflare challenge indicators
+      const titleCheck = 
+        title.includes('just a moment') ||
+        title.includes('attention required') ||
+        title.includes('please wait')
+      
+      const bodyCheck = 
+        bodyText.includes('checking your browser') ||
+        bodyText.includes('checking if the site connection is secure') ||
+        bodyText.includes('please wait') ||
+        bodyText.includes('ddos protection') ||
+        bodyText.includes('enable javascript and cookies') ||
+        bodyText.includes('verify you are human')
+      
+      const htmlCheck = 
+        html.includes('cf-browser-verification') ||
+        html.includes('cf-challenge-form') ||
+        html.includes('cf-wrapper') ||
+        html.includes('turnstile') ||
+        html.includes('cloudflare') ||
+        html.includes('ray id')
+      
+      // Check for Turnstile iframe
+      const hasTurnstile = document.querySelector('iframe[src*="challenges.cloudflare.com"]') !== null
+      
+      return {
+        hasChallenge: titleCheck || bodyCheck || htmlCheck || hasTurnstile,
+        titleCheck,
+        bodyCheck,
+        htmlCheck,
+        hasTurnstile
+      }
+    })
+    
+    return indicators.hasChallenge
   } catch (e) {
-    // Timeout reached, challenge might still be present
+    return false
+  }
+}
+
+/**
+ * Wait for Cloudflare challenge to complete with enhanced detection
+ */
+export async function waitForCloudflare(page: Page, timeout: number = 30000): Promise<boolean> {
+  const startTime = Date.now()
+  const checkInterval = 500
+  
+  try {
+    // Initial check
+    const hasChallenge = await isCloudflareChallenge(page)
+    if (!hasChallenge) {
+      return true // No challenge present
+    }
+    
+    console.log('Cloudflare challenge detected, waiting...')
+    
+    // Wait for challenge to resolve
+    while (Date.now() - startTime < timeout) {
+      await new Promise(resolve => setTimeout(resolve, checkInterval))
+      
+      // Check if challenge is complete
+      const stillChallenged = await isCloudflareChallenge(page)
+      if (!stillChallenged) {
+        console.log('Cloudflare challenge passed!')
+        // Wait a bit more for page to stabilize
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        return true
+      }
+      
+      // Check for manual verification requirement
+      const needsManual = await page.evaluate(() => {
+        const bodyText = document.body.innerText.toLowerCase()
+        return bodyText.includes('verify you are human') ||
+               bodyText.includes('complete the security check') ||
+               document.querySelector('input[type="checkbox"]') !== null
+      })
+      
+      if (needsManual) {
+        console.warn('Manual verification required - cannot auto-bypass')
+        return false
+      }
+    }
+    
+    console.warn('Cloudflare challenge timeout')
+    return false
+  } catch (e) {
+    console.error('Error waiting for Cloudflare:', e)
     return false
   }
 }
@@ -176,29 +316,69 @@ export async function navigateWithBypass(
   url: string, 
   options: { 
     waitUntil?: 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2',
-    timeout?: number 
+    timeout?: number,
+    retries?: number
   } = {}
-): Promise<void> {
-  const { waitUntil = 'networkidle2', timeout = 45000 } = options
+): Promise<{ success: boolean; error?: string }> {
+  const { waitUntil = 'networkidle2', timeout = 60000, retries = 2 } = options
   
-  // Random delay before navigation (simulate human behavior)
-  await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500))
-  
-  // Navigate to page
-  await page.goto(url, {
-    waitUntil,
-    timeout
-  })
-  
-  // Wait for Cloudflare challenge if present
-  const bypassSuccessful = await waitForCloudflare(page, 15000)
-  
-  if (!bypassSuccessful) {
-    console.warn('Cloudflare challenge detection timeout - may still be challenged')
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      if (attempt > 0) {
+        console.log(`Retry attempt ${attempt}/${retries}`)
+        await new Promise(resolve => setTimeout(resolve, 3000))
+      }
+      
+      // Random delay before navigation (simulate human behavior)
+      await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500))
+      
+      // Navigate to page
+      try {
+        await page.goto(url, {
+          waitUntil,
+          timeout
+        })
+      } catch (navError: any) {
+        // Continue even if navigation times out, page might have loaded
+        if (!navError.message.includes('timeout')) {
+          throw navError
+        }
+        console.warn('Navigation timeout, checking if page loaded...')
+      }
+      
+      // Check for Cloudflare challenge
+      const hasChallenge = await isCloudflareChallenge(page)
+      
+      if (hasChallenge) {
+        console.log('Cloudflare challenge detected, waiting up to 30s...')
+        const bypassSuccessful = await waitForCloudflare(page, 30000)
+        
+        if (!bypassSuccessful) {
+          if (attempt === retries) {
+            return { 
+              success: false, 
+              error: 'Cloudflare challenge could not be bypassed automatically. Manual verification may be required.' 
+            }
+          }
+          continue // Retry
+        }
+      }
+      
+      // Additional wait for dynamic content
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      return { success: true }
+    } catch (error: any) {
+      if (attempt === retries) {
+        return { 
+          success: false, 
+          error: `Navigation failed: ${error.message}` 
+        }
+      }
+    }
   }
   
-  // Additional wait for dynamic content
-  await new Promise(resolve => setTimeout(resolve, 2000))
+  return { success: false, error: 'Max retries exceeded' }
 }
 
 /**
