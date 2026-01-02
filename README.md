@@ -37,14 +37,31 @@ A powerful Next.js application that can scan any website, clone its content, and
 
 ## Anti-Detection Features
 
-The scanner includes several techniques to appear more like a real browser:
+The scanner includes several advanced techniques to bypass bot detection and Cloudflare protection:
 
-1. **User-Agent Rotation**: Randomly selects from multiple modern browser User-Agents
-2. **Realistic Headers**: Includes Accept-Language, DNT, Sec-Fetch-* headers
-3. **Stealth Mode**: Puppeteer-extra with stealth plugin to avoid detection
-4. **Network Monitoring**: Captures all XHR/Fetch requests in real-time
-5. **Browser Fingerprinting**: Mimics real Chrome/Firefox behavior
-6. **Connection Management**: Proper keep-alive and connection handling
+1. **Cloudflare Bypass**: Enhanced stealth mode to bypass Cloudflare challenges
+   - Puppeteer-extra with stealth plugin
+   - Custom navigator property overrides
+   - WebGL fingerprint spoofing
+   - Realistic browser timing and behavior simulation
+   
+2. **User-Agent Rotation**: Randomly selects from multiple modern browser User-Agents
+3. **Realistic Headers**: Includes Accept-Language, DNT, Sec-Fetch-* headers, sec-ch-ua
+4. **Browser Fingerprinting**: Mimics real Chrome behavior with:
+   - Hardware concurrency simulation (8 cores)
+   - Device memory spoofing (8GB)
+   - Battery API simulation
+   - Network connection properties (4G)
+   - Screen properties (1920x1080, 24-bit color)
+   
+5. **Network Monitoring**: Captures all XHR/Fetch requests in real-time
+6. **Human Behavior Simulation**: 
+   - Random delays before navigation (500-1500ms)
+   - Mouse movement simulation
+   - Scroll simulation
+   - Challenge detection and wait logic
+   
+7. **Connection Management**: Proper keep-alive and connection handling
 
 ## Technology Stack
 

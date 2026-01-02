@@ -1,30 +1,45 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import * as cheerio from 'cheerio'
 import lighthouse from 'lighthouse'
+import { applyStealthMeasures, navigateWithBypass } from '@/utils/cloudflare-bypass'
 
-// Dynamic import for puppeteer - use different packages for local vs production
+// Dynamic import for puppeteer with Cloudflare bypass - use different packages for local vs production
 async function getBrowser() {
   // Try local puppeteer first, fallback to puppeteer-core + chromium
   try {
-    const puppeteer = await import('puppeteer')
+    const puppeteer = await import('puppeteer-extra')
+    const StealthPlugin = (await import('puppeteer-extra-plugin-stealth')).default
+    puppeteer.default.use(StealthPlugin())
+    
     return await puppeteer.default.launch({
       headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-blink-features=AutomationControlled',
-        '--disable-features=IsolateOrigins,site-per-process'
+        '--disable-features=IsolateOrigins,site-per-process',
+        '--disable-web-security',
+        '--disable-features=site-per-process',
+        '--window-size=1920,1080',
+        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       ]
     })
   } catch {
-    // Production environment (Render) - use serverless chromium
-    const puppeteerCore = await import('puppeteer-core')
+    // Production environment (Vercel/Render) - use serverless chromium with stealth
+    const puppeteerExtra = await import('puppeteer-extra')
+    const StealthPlugin = (await import('puppeteer-extra-plugin-stealth')).default
     const chromium = await import('@sparticuz/chromium')
-    return await puppeteerCore.default.launch({
+    
+    puppeteerExtra.default.use(StealthPlugin())
+    
+    return await puppeteerExtra.default.launch({
       args: [
         ...chromium.default.args,
         '--disable-blink-features=AutomationControlled',
-        '--disable-features=IsolateOrigins,site-per-process'
+        '--disable-features=IsolateOrigins,site-per-process',
+        '--disable-web-security',
+        '--window-size=1920,1080',
+        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       ],
       defaultViewport: { width: 1920, height: 1080 },
       executablePath: await chromium.default.executablePath(),
@@ -331,54 +346,8 @@ export default async function handler(
 
     const page = await browser.newPage()
 
-    // Enhanced stealth: Remove webdriver flag and modify navigator properties
-    await page.evaluateOnNewDocument(() => {
-      // Remove webdriver property
-      Object.defineProperty(navigator, 'webdriver', {
-        get: () => undefined,
-      })
-
-      // Override plugins to make it look real
-      Object.defineProperty(navigator, 'plugins', {
-        get: () => [1, 2, 3, 4, 5],
-      })
-
-      // Override languages
-      Object.defineProperty(navigator, 'languages', {
-        get: () => ['en-US', 'en'],
-      })
-
-      // Chrome runtime
-      // @ts-ignore
-      window.chrome = {
-        runtime: {},
-      }
-
-      // Permissions
-      const originalQuery = window.navigator.permissions.query
-      window.navigator.permissions.query = (parameters: any) => (
-        parameters.name === 'notifications' ?
-          Promise.resolve({ state: Notification.permission } as any) :
-          originalQuery(parameters)
-      )
-    })
-
-    // Set viewport
-    await page.setViewport({ width: 1920, height: 1080 })
-
-    // Set extra headers with realistic browser fingerprint
-    await page.setExtraHTTPHeaders({
-      'Accept-Language': 'en-US,en;q=0.9',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'Connection': 'keep-alive',
-      'Upgrade-Insecure-Requests': '1',
-      'Sec-Fetch-Dest': 'document',
-      'Sec-Fetch-Mode': 'navigate',
-      'Sec-Fetch-Site': 'none',
-      'Sec-Fetch-User': '?1',
-      'Cache-Control': 'max-age=0'
-    })
+    // Apply comprehensive stealth measures for Cloudflare bypass
+    await applyStealthMeasures(page)
 
     // Track network requests and response headers
     const networkRequests: string[] = []
@@ -437,12 +406,14 @@ export default async function handler(
       })
     })
 
-    // Navigate to the page with timeout
+    // Navigate to the page with Cloudflare bypass
     const navigationStart = Date.now()
-    const response = await page.goto(url, {
+    
+    await navigateWithBypass(page, url, {
       waitUntil: 'networkidle2',
-      timeout: 30000
+      timeout: 45000
     })
+    
     const navigationEnd = Date.now()
     const loadTime = navigationEnd - navigationStart
 
